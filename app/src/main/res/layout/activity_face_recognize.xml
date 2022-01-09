@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
+        app:title="   "
         app:navigationIcon="@drawable/back_arrow_black"
         />
 
@@ -85,8 +86,7 @@
         android:textColor="@color/white"
         android:text="Identify"
         android:textAlignment="center"
-        android:visibility="visible"
-        tools:visibility="visible"
+        android:visibility="gone"
         android:layout_marginTop="12dp"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -125,9 +125,32 @@
             android:clipToPadding="false"
             android:visibility="visible" />
 
+        <ImageView
+            android:id="@+id/backwardBtn"
+            android:layout_width="@dimen/_46sdp"
+            android:layout_height="@dimen/_46sdp"
+            android:src="@drawable/back_arrow_black"
+            android:padding="@dimen/_5sdp"
+            android:layout_centerVertical="true"
+            android:visibility="gone"
+            />
+
+        <ImageView
+            android:id="@+id/forwardBtn"
+            android:layout_width="@dimen/_46sdp"
+            android:layout_height="@dimen/_46sdp"
+            android:src="@drawable/back_arrow_black"
+            android:padding="@dimen/_5sdp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:rotation="180"
+            android:visibility="gone"
+            />
+
     </RelativeLayout>
 
     <ImageButton
+        android:visibility="gone"
         android:id="@+id/imageButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

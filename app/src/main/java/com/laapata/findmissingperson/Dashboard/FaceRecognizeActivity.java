@@ -42,6 +42,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
@@ -121,6 +122,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
     private static int SELECT_PICTURE = 1;
     ProcessCameraProvider cameraProvider;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+    ImageView backwardBtn,forwardBtn;
 
     String modelFile= "mobile_face_net.tflite"; //model name
     private HashMap<String, SimilarityClassifier.Recognition> registered = new HashMap<>(); //saved Faces
@@ -131,10 +133,17 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         registered = readFromSP(); //Load saved faces from memory when app starts
         setContentView(R.layout.activity_face_recognize);
 
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(view -> onBackPressed());
         face_preview =findViewById(R.id.imageView);
         reco_name =findViewById(R.id.textView);
         preview_info =findViewById(R.id.textView2);
         add_face=findViewById(R.id.imageButton);
+        backwardBtn = findViewById(R.id.backwardBtn);
+        forwardBtn = findViewById(R.id.forwardBtn);
+
         add_face.setVisibility(View.INVISIBLE);
 
         face_preview.setVisibility(View.INVISIBLE);
@@ -300,18 +309,13 @@ public class FaceRecognizeActivity extends AppCompatActivity {
             builder.show();
         }
 
-    private void addFace2(String name){
-        // Set up the input
-//        SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition("0", name, -1f);
-//        result.setExtra(embeedings);
-//        registered.put(name,result);
-//        start=true;
-
-        SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition("0", "", -1f);
+    private void addFace2(String id,String name){
+        SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition(id, name, -1f);
         result.setExtra(embeedings);
         registered.put(name,result);
         insertToSP(registered,false);
-//        start=true;
+        System.out.println("ddddddddddddddrrrrrrrrb-4--"+result.toString()+"-:::"+embeedings);
+        start=true;
     }
     private  void clearnameList() {
         AlertDialog.Builder builder =new AlertDialog.Builder(context);
@@ -336,14 +340,11 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         }
         else{
             builder.setTitle("Select Recognition to delete:");
-
             // add a checkbox list
             String[] names= new String[registered.size()];
             boolean[] checkedItems = new boolean[registered.size()];
             int i=0;
-            for (Map.Entry<String, SimilarityClassifier.Recognition> entry : registered.entrySet())
-            {
-                //System.out.println("NAME"+entry.getKey());
+            for (Map.Entry<String, SimilarityClassifier.Recognition> entry : registered.entrySet()) {
                 names[i]=entry.getKey();
                 checkedItems[i]=false;
                 i=i+1;
@@ -398,18 +399,20 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         String[] names= new String[registered.size()];
         boolean[] checkedItems = new boolean[registered.size()];
         int i=0;
-        for (Map.Entry<String, SimilarityClassifier.Recognition> entry : registered.entrySet())
-        {
-            //System.out.println("NAME"+entry.getKey());
+        for (Map.Entry<String, SimilarityClassifier.Recognition> entry : registered.entrySet()) {
+            System.out.println("1111111111NAME--="+entry.getKey());
+            System.out.println("1111111111NAME2-="+entry.getKey().toString());
             names[i]=entry.getKey();
             checkedItems[i]=false;
             i=i+1;
 
         }
+
+//        SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition("0", "", -1f);
+//        result.setExtra(embeedings);
+//        registered.put("",result);
+
         builder.setItems(names,null);
-
-
-
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -507,7 +510,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                                                         //Scale the acquired Face to 112*112 which is required input for model
                                                         Bitmap scaled = getResizedBitmap(cropped_face, 112, 112);
                                                         if(start)
-                                                            recognizeImage(scaled); //Send scaled bitmap to create face embeddings.
+                                                            recognizeImage(scaled,""); //Send scaled bitmap to create face embeddings.
                                                         System.out.println(boundingBox);
                                                         try {
                                                             Thread.sleep(10);  //Camera preview refreshed every 10 millisec(adjust as required)
@@ -549,7 +552,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis, preview);
     }
 
-    public void recognizeImage(final Bitmap bitmap) {
+    public void recognizeImage(final Bitmap bitmap,String title) {
         // set Face to Preview
         if (face_preview!=null) face_preview.setImageBitmap(bitmap);
         //Create ByteBuffer to store normalized image
@@ -595,11 +598,12 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                 distance = nearest.second;
                 if (distance < 1.000f) { //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
                     if (reco_name!=null) reco_name.setText(name);
-                    showToast("Matched! " + name);
+//                    registered
+//                    showToast("Matched! " + name);
                 } else {
                     if (reco_name!=null) reco_name.setText("Unknown");
                     System.out.println("nearest: " + name + " - distance: " + distance);
-                    showToast("Not Matched! " + "Unknown");
+//                    showToast("Not Matched! " + "Unknown");
                 }
             }
         }
@@ -807,7 +811,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         editor.putString("map", jsonString);
         //System.out.println("Input josn"+jsonString.toString());
         editor.apply();
-        Toast.makeText(context, "Recognitions Saved", Toast.LENGTH_SHORT).show();
+        showToast("Recognitions Saved");
     }
     //Load Faces from Shared Preferences.Json String to Recognition object
     private HashMap<String, SimilarityClassifier.Recognition> readFromSP(){
@@ -818,7 +822,6 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         TypeToken<HashMap<String,SimilarityClassifier.Recognition>> token = new TypeToken<HashMap<String,SimilarityClassifier.Recognition>>() {};
         HashMap<String,SimilarityClassifier.Recognition> retrievedMap=new Gson().fromJson(json,token.getType());
         // System.out.println("Output map"+retrievedMap.toString());
-
         //During type conversion and save/load procedure,format changes(eg float converted to double).
         //So embeddings need to be extracted from it in required format(eg.double to float).
         for (Map.Entry<String, SimilarityClassifier.Recognition> entry : retrievedMap.entrySet())
@@ -835,7 +838,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
 
         }
 //        System.out.println("OUTPUT"+ Arrays.deepToString(outut));
-        Toast.makeText(context, "Recognitions Loaded", Toast.LENGTH_SHORT).show();
+        showToast("Recognitions Loaded");
         return retrievedMap;
     }
     //Load Photo from phone storage
@@ -879,7 +882,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                                 Bitmap cropped_face = getCropBitmapByCPU(frame_bmp1, boundingBox);
                                 Bitmap scaled = getResizedBitmap(cropped_face, 112, 112);
                                 // face_preview.setImageBitmap(scaled);
-                                recognizeImage(scaled);
+                                recognizeImage(scaled,"");
                                 addFace();
                                 System.out.println(boundingBox);
                                 try {
@@ -926,6 +929,22 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                     gigsDataList.clear();
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                         FoundPersonModel model = dataSnapshot.getValue(FoundPersonModel.class);
+                        if (model != null) {
+                            /*Glide.with(context)
+                                    .asBitmap()
+                                    .load(model.getMpimage())
+                                    .into(new CustomTarget<Bitmap>() {
+                                        @Override
+                                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                                            matchFaces(resource,model.getMpname());
+                                            System.out.println("ddddddddddddddrrrrrrrrb-x2-"+model.getMpimage());
+                                        }
+
+                                        @Override
+                                        public void onLoadCleared(@Nullable Drawable placeholder) {
+                                            System.out.println("ddddddddddddddrrrrrrrrb-x3-"+model.getMpimage());
+                                        }});*/
+                        }
                         gigsDataList.add(model);
                     }
 
@@ -939,7 +958,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                                     .into(new CustomTarget<Bitmap>() {
                                         @Override
                                         public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                            matchFaces(resource,gigsData.getMpname());
+                                            matchFaces(resource,gigsData.getCaseid(),gigsData.getMpname());
                                             System.out.println("ddddddddddddddrrrrrrrrb-x1-"+gigsData.getMpimage());
                                         }
 
@@ -956,16 +975,36 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                     myViewPager2.setAdapter(adapterSlider);
                     myViewPager2.setOffscreenPageLimit(1);
 
+                    if(gigsDataList.size()>1){
+                        backwardBtn.setVisibility(View.VISIBLE);
+                        forwardBtn.setVisibility(View.VISIBLE);
+                    }else{
+                        backwardBtn.setVisibility(View.GONE);
+                        forwardBtn.setVisibility(View.GONE);
+                    }
+
+                    backwardBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            myViewPager2.setCurrentItem(myViewPager2.getCurrentItem()-1,true);
+                        }
+                    });
+
+                    forwardBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            myViewPager2.setCurrentItem(myViewPager2.getCurrentItem()+1,true);
+                        }
+                    });
+
                 }
 
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) { }});
-
     }
 
-    private void matchFaces(Bitmap bitmap,String name){
+    private void matchFaces(Bitmap bitmap,String userUid,String name){
 //        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.police_marker);
         InputImage impphoto = InputImage.fromBitmap(bitmap,0);
         detector.process(impphoto).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
@@ -989,8 +1028,8 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                     Bitmap cropped_face = getCropBitmapByCPU(frame_bmp1, boundingBox);
                     Bitmap scaled = getResizedBitmap(cropped_face, 112, 112);
                     // face_preview.setImageBitmap(scaled);
-                    recognizeImage(scaled);
-                    addFace2(name);
+                    recognizeImage(scaled,name);
+                    addFace2(userUid,name);
                     System.out.println("ddddddddddddddrrrrrrrrb-1-"+boundingBox);
 //                    try {
 //                        Thread.sleep(100);

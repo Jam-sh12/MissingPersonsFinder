@@ -3,6 +3,7 @@ import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -38,7 +39,7 @@ public class AdapterSlider extends RecyclerView.Adapter<AdapterSlider.ViewHolder
         FoundPersonModel gigsData = gigsDataList.get(position);
         if (gigsData!=null){
             Glide.with(context).load(gigsData.getMpimage()).into(holder.imageView);
-            holder.itemView.setOnClickListener(v -> {
+            holder.selectBtn.setOnClickListener(v -> {
                 onItemClicked.onItemClicked(gigsData);
             });
         }
@@ -71,9 +72,11 @@ public class AdapterSlider extends RecyclerView.Adapter<AdapterSlider.ViewHolder
     @SuppressWarnings("InnerClassMayBeStatic")
     public class ViewHolder extends RecyclerView.ViewHolder{
          ImageView imageView;
+         Button selectBtn;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.iv_rcs);
+            selectBtn = itemView.findViewById(R.id.selectBtn);
         }
     }
 }
