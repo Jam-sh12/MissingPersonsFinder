@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "824657387982",
+    "firebase_url": "https://laapata-find-missing-person.firebaseio.com",
+    "project_id": "laapata-find-missing-person",
+    "storage_bucket": "laapata-find-missing-person.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:824657387982:android:cd4141a000b13acdcf4b9f",
+        "android_client_info": {
+          "package_name": "com.laapata.findmissingperson"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "824657387982-c6214gpvbh7dkc5e48vllhrebvbn0f3m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClwAx_r138ZR0BnBGMSYp2JqA80Dfx52s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "824657387982-c6214gpvbh7dkc5e48vllhrebvbn0f3m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
