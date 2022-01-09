@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+<androidx.cardview.widget.CardView
+    android:layout_width="@dimen/_130sdp"
+    android:layout_height="@dimen/_130sdp"
     app:cardCornerRadius="@dimen/_15sdp"
     android:layout_marginHorizontal="8dp"
+    android:layout_centerHorizontal="true"
     >
 
     <ImageView
         android:id="@+id/iv_rcs"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
+        android:scaleType="fitXY"
         />
 
 </androidx.cardview.widget.CardView>
+</RelativeLayout>

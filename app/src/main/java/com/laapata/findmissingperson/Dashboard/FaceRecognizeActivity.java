@@ -24,6 +24,7 @@ import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.text.InputType;
 import android.util.Pair;
@@ -54,7 +55,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -132,22 +135,22 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         reco_name =findViewById(R.id.textView);
         preview_info =findViewById(R.id.textView2);
         add_face=findViewById(R.id.imageButton);
-//        add_face.setVisibility(View.INVISIBLE);
+        add_face.setVisibility(View.INVISIBLE);
 
-//        face_preview.setVisibility(View.INVISIBLE);
-        recognize=findViewById(R.id.button3);
-        camera_switch=findViewById(R.id.button5);
-        actions=findViewById(R.id.button2);
+        face_preview.setVisibility(View.INVISIBLE);
+        recognize = findViewById(R.id.button3);
+        camera_switch = findViewById(R.id.button5);
+        actions = findViewById(R.id.button2);
         previewView = findViewById(R.id.previewView);
-//        preview_info.setText("\n        Recognized Face:");
-        //Camera Permission
+        preview_info.setText("\n        Recognized Face:");
+//        Camera Permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
             }
         }
         //On-screen Action Button
-        /*actions.setOnClickListener(new View.OnClickListener() {
+        actions.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -158,9 +161,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                 builder.setItems(names, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
-                        switch (which)
-                        {
+                        switch (which) {
                             case 0:
                                 displaynameListview();
                                 break;
@@ -197,7 +198,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                 AlertDialog dialog = builder.create();
                 dialog.show();
             }
-        });*/
+        });
         //On-screen switch to toggle between Cameras.
         if (camera_switch!=null) {
             camera_switch.setOnClickListener(v -> {
@@ -278,7 +279,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
             builder.setPositiveButton("ADD", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    //Toast.makeText(context, input.getText().toString(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, input.getText().toString(), Toast.LENGTH_SHORT).show();
                     //Create and Initialize new object with Face embeddings and Name.
                     SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition(
                             "0", "", -1f);
@@ -301,10 +302,16 @@ public class FaceRecognizeActivity extends AppCompatActivity {
 
     private void addFace2(String name){
         // Set up the input
+//        SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition("0", name, -1f);
+//        result.setExtra(embeedings);
+//        registered.put(name,result);
+//        start=true;
+
         SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition("0", "", -1f);
         result.setExtra(embeedings);
         registered.put(name,result);
-        start=true;
+        insertToSP(registered,false);
+//        start=true;
     }
     private  void clearnameList() {
         AlertDialog.Builder builder =new AlertDialog.Builder(context);
@@ -474,66 +481,66 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                     image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
                     System.out.println("Rotation "+imageProxy.getImageInfo().getRotationDegrees());
                 }
-
                 System.out.println("ANALYSIS");
-
                 //Process acquired image to detect faces
-                Task<List<Face>> result =
-                        detector.process(image)
-                                .addOnSuccessListener(
-                                        new OnSuccessListener<List<Face>>() {
-                                            @Override
-                                            public void onSuccess(List<Face> faces) {
-                                                if(faces.size()!=0) {
-                                                    Face face = faces.get(0); //Get first face from detected faces
-                                                    System.out.println(face);
-                                                    //mediaImage to Bitmap
-                                                    Bitmap frame_bmp = toBitmap(mediaImage);
-                                                    int rot = imageProxy.getImageInfo().getRotationDegrees();
-                                                    //Adjust orientation of Face
-                                                    Bitmap frame_bmp1 = rotateBitmap(frame_bmp, rot, false, false);
-                                                    //Get bounding box of face
-                                                    RectF boundingBox = new RectF(face.getBoundingBox());
-                                                    //Crop out bounding box from whole Bitmap(image)
-                                                    Bitmap cropped_face = getCropBitmapByCPU(frame_bmp1, boundingBox);
-                                                    if(flipX)
-                                                        cropped_face = rotateBitmap(cropped_face, 0, flipX, false);
-                                                    //Scale the acquired Face to 112*112 which is required input for model
-                                                    Bitmap scaled = getResizedBitmap(cropped_face, 112, 112);
-                                                    if(start)
-                                                        recognizeImage(scaled); //Send scaled bitmap to create face embeddings.
-                                                    System.out.println(boundingBox);
-                                                    try {
-                                                        Thread.sleep(10);  //Camera preview refreshed every 10 millisec(adjust as required)
-                                                    } catch (InterruptedException e) {
-                                                        e.printStackTrace();
+                if (image != null) {
+                    Task<List<Face>> result =
+                            detector.process(image)
+                                    .addOnSuccessListener(
+                                            new OnSuccessListener<List<Face>>() {
+                                                @Override
+                                                public void onSuccess(@NonNull List<Face> faces) {
+                                                    if(faces.size()!=0) {
+                                                        Face face = faces.get(0); //Get first face from detected faces
+                                                        System.out.println(face);
+                                                        //mediaImage to Bitmap
+                                                        Bitmap frame_bmp = toBitmap(mediaImage);
+                                                        int rot = imageProxy.getImageInfo().getRotationDegrees();
+                                                        //Adjust orientation of Face
+                                                        Bitmap frame_bmp1 = rotateBitmap(frame_bmp, rot, false, false);
+                                                        //Get bounding box of face
+                                                        RectF boundingBox = new RectF(face.getBoundingBox());
+                                                        //Crop out bounding box from whole Bitmap(image)
+                                                        Bitmap cropped_face = getCropBitmapByCPU(frame_bmp1, boundingBox);
+                                                        if(flipX)
+                                                            cropped_face = rotateBitmap(cropped_face, 0, flipX, false);
+                                                        //Scale the acquired Face to 112*112 which is required input for model
+                                                        Bitmap scaled = getResizedBitmap(cropped_face, 112, 112);
+                                                        if(start)
+                                                            recognizeImage(scaled); //Send scaled bitmap to create face embeddings.
+                                                        System.out.println(boundingBox);
+                                                        try {
+                                                            Thread.sleep(10);  //Camera preview refreshed every 10 millisec(adjust as required)
+                                                        } catch (InterruptedException e) {
+                                                            e.printStackTrace();
+                                                        }
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    if(registered.isEmpty())
-                                                        reco_name.setText("Add Face");
                                                     else
-                                                        reco_name.setText("No Face Detected!");
+                                                    {
+                                                        if(registered.isEmpty())
+                                                            reco_name.setText("Add Face");
+                                                        else
+                                                            reco_name.setText("No Face Detected!");
+                                                    }
+
                                                 }
+                                            })
+                                    .addOnFailureListener(
+                                            new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    // Task failed with an exception
+                                                    // ...
+                                                }
+                                            })
+                                    .addOnCompleteListener(new OnCompleteListener<List<Face>>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<List<Face>> task) {
 
-                                            }
-                                        })
-                                .addOnFailureListener(
-                                        new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                // Task failed with an exception
-                                                // ...
-                                            }
-                                        })
-                                .addOnCompleteListener(new OnCompleteListener<List<Face>>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<List<Face>> task) {
-
-                                        imageProxy.close(); //v.important to acquire next frame for analysis
-                                    }
-                                });
+                                            imageProxy.close(); //v.important to acquire next frame for analysis
+                                        }
+                                    });
+                }
 
 
             }
@@ -572,7 +579,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         Object[] inputArray = {imgData};
         Map<Integer, Object> outputMap = new HashMap<>();
         embeedings = new float[1][OUTPUT_SIZE]; //output of model will be stored in this variable
-        System.out.println("dddddddddddddddddd--- "+embeedings);
+        System.out.println("dddddddddddddddddd--- "+embeedings.toString());
         outputMap.put(0, embeedings);
         tfLite.runForMultipleInputsOutputs(inputArray, outputMap); //Run model
 
@@ -588,11 +595,11 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                 distance = nearest.second;
                 if (distance < 1.000f) { //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
                     if (reco_name!=null) reco_name.setText(name);
-                    Toast.makeText(FaceRecognizeActivity.this, "Matched! " + name, Toast.LENGTH_SHORT).show();
+                    showToast("Matched! " + name);
                 } else {
                     if (reco_name!=null) reco_name.setText("Unknown");
                     System.out.println("nearest: " + name + " - distance: " + distance);
-                    Toast.makeText(FaceRecognizeActivity.this, "Not Matched! " + "Unknown", Toast.LENGTH_SHORT).show();
+                    showToast("Not Matched! " + "Unknown");
                 }
             }
         }
@@ -774,6 +781,16 @@ public class FaceRecognizeActivity extends AppCompatActivity {
 
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
+    public void showToast(String msg){
+        Toast toast =  Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT);
+        new Handler().postDelayed(() -> {
+            if (toast!=null)
+                toast.cancel();
+
+        },1500);
+        if (toast!=null)
+            toast.show();
+    }
     //Save Faces to Shared Preferences.Conversion of Recognition objects to json string
     private void insertToSP(HashMap<String, SimilarityClassifier.Recognition> jsonMap,boolean clear) {
         if(clear)
@@ -913,19 +930,25 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                     }
 
                     AdapterSlider adapterSlider = new AdapterSlider(FaceRecognizeActivity.this, gigsDataList, new OnItemClicked() {
+                        @SuppressLint("CheckResult")
                         @Override
                         public void onItemClicked(FoundPersonModel gigsData) {
-                            Glide.with(context).load(gigsData.getMpimage()).addListener(new RequestListener<Drawable>() {
-                                @Override
-                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { return false; }
+                            Glide.with(context)
+                                    .asBitmap()
+                                    .load(gigsData.getMpimage())
+                                    .into(new CustomTarget<Bitmap>() {
+                                        @Override
+                                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                                            matchFaces(resource,gigsData.getMpname());
+                                            System.out.println("ddddddddddddddrrrrrrrrb-x1-"+gigsData.getMpimage());
+                                        }
 
-                                @Override
-                                public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                                    Bitmap bitmap = ((BitmapDrawable) resource).getBitmap();
-                                    matchFaces(bitmap,gigsData.getMpname());
-                                    return false;
-                                }
-                            });
+                                        @Override
+                                        public void onLoadCleared(@Nullable Drawable placeholder) {
+                                            System.out.println("ddddddddddddddrrrrrrrrb-0-"+gigsData.getMpimage());
+                                        }});
+
+                            System.out.println("ddddddddddddddrrrrrrrrb-x0-"+gigsData.getMpimage());
 
                         }
                     });
@@ -947,7 +970,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         InputImage impphoto = InputImage.fromBitmap(bitmap,0);
         detector.process(impphoto).addOnSuccessListener(new OnSuccessListener<List<Face>>() {
             @Override
-            public void onSuccess(List<Face> faces) {
+            public void onSuccess(@NonNull List<Face> faces) {
                 if(faces.size()!=0) {
                     recognize.setText("Recognize");
 //                    add_face.setVisibility(View.VISIBLE);
@@ -968,7 +991,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                     // face_preview.setImageBitmap(scaled);
                     recognizeImage(scaled);
                     addFace2(name);
-                    System.out.println(boundingBox);
+                    System.out.println("ddddddddddddddrrrrrrrrb-1-"+boundingBox);
 //                    try {
 //                        Thread.sleep(100);
 //                    } catch (InterruptedException e) {
@@ -981,9 +1004,10 @@ public class FaceRecognizeActivity extends AppCompatActivity {
             public void onFailure(@NonNull Exception e) {
                 start=true;
                 Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show();
+                System.out.println("ddddddddddddddrrrrrrrrb-2-"+e.toString());
             }
         });
-        face_preview.setImageBitmap(bitmap);
+        System.out.println("ddddddddddddddrrrrrrrrb-3-"+name);
     }
 
 }

@@ -14,7 +14,6 @@ import com.laapata.findmissingperson.ModelClasses.GigsData;
 import com.laapata.findmissingperson.R;
 
 import java.util.List;
-
 public class AdapterSlider extends RecyclerView.Adapter<AdapterSlider.ViewHolder> {
 
     private final Activity context;
