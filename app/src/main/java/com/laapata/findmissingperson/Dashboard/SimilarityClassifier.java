@@ -51,5 +51,18 @@ public interface SimilarityClassifier {
       return resultString.trim();
     }
 
+    public String getId() {
+      return id;
+    }
+
+    public String getTitle() {
+      return title;
+    }
+
+    public Float getDistance() {
+      return distance;
+    }
   }
+
+
 }

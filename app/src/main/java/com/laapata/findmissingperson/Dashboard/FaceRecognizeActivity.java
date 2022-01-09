@@ -76,6 +76,7 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.laapata.findmissingperson.Dashboard.Activities.Fp_Report_Details;
 import com.laapata.findmissingperson.ModelClasses.FoundPersonModel;
 import com.laapata.findmissingperson.R;
 
@@ -314,7 +315,7 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         result.setExtra(embeedings);
         registered.put(name,result);
         insertToSP(registered,false);
-        System.out.println("ddddddddddddddrrrrrrrrb-4--"+result.toString()+"-:::"+embeedings);
+        System.out.println("ddddddddddddddrrrrrrrrb-4--"+result.toString()+"-:::"+id);
         start=true;
     }
     private  void clearnameList() {
@@ -401,7 +402,10 @@ public class FaceRecognizeActivity extends AppCompatActivity {
         int i=0;
         for (Map.Entry<String, SimilarityClassifier.Recognition> entry : registered.entrySet()) {
             System.out.println("1111111111NAME--="+entry.getKey());
-            System.out.println("1111111111NAME2-="+entry.getKey().toString());
+            SimilarityClassifier.Recognition rc = entry.getValue();
+
+            System.out.println("1111111111NAME2-="+rc.getId());
+
             names[i]=entry.getKey();
             checkedItems[i]=false;
             i=i+1;
@@ -598,6 +602,21 @@ public class FaceRecognizeActivity extends AppCompatActivity {
                 distance = nearest.second;
                 if (distance < 1.000f) { //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
                     if (reco_name!=null) reco_name.setText(name);
+                    System.out.println("1111111111NAME3-="+name);
+//                    ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+                    String[] names= new String[registered.size()];
+                    for (Map.Entry<String, SimilarityClassifier.Recognition> entry : registered.entrySet()) {
+                        if (entry.getKey()!=null) {
+                            if (name.equals(entry.getKey())) {
+                                System.out.println("1111111111NAME--="+entry.getKey());
+                                SimilarityClassifier.Recognition rc = entry.getValue();
+                                System.out.println("1111111111NAME2-="+rc.getId());
+                                moveToNextActivity(rc.getId());
+                            }
+                        }
+                    }
+//                    ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
 //                    registered
 //                    showToast("Matched! " + name);
                 } else {
@@ -617,6 +636,16 @@ public class FaceRecognizeActivity extends AppCompatActivity {
 //
 //            recognitions.add( rec );
     }
+    boolean isMoved = true;
+    private void moveToNextActivity(String caseId){
+        if (isMoved) {
+            Intent intent = new Intent(context, Fp_Report_Details.class);
+            intent.putExtra("caseid", caseId);
+            startActivity(intent);
+            isMoved=false;
+        }
+    }
+
 //    public void register(String name, SimilarityClassifier.Recognition rec) {
 //        registered.put(name, rec);
 //    }
